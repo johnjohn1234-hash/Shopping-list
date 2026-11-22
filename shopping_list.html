@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping list — Hotel Supply &amp; Grocery Ordering</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Hide scrollbar for horizontal category tabs on mobile while keeping scrollability */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#f8fafc] text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand / Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900">Shopping list</h1>
+          <p class="text-xs text-slate-500 hidden sm:block">Hotel Grocery &amp; Supply Ordering • English / Bahasa Indonesia</p>
+        </div>
+      </div>
+
+      <!-- Right Controls: Hotel Selector + Cart Button -->
+      <div class="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <!-- Prominent Hotel Dropdown in Header -->
+        <div class="relative flex-1 sm:flex-initial sm:min-w-[230px]">
+          <label for="header-hotel-select" class="sr-only">Select Hotel</label>
+          <div class="relative">
+            <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-emerald-600">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </span>
+            <select id="header-hotel-select" onchange="syncHotelSelection(this.value)"
+              class="w-full appearance-none bg-slate-50 hover:bg-slate-100 border border-slate-300 text-slate-800 text-sm font-medium rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition cursor-pointer">
+              <option value="">Select Hotel / Pilih Hotel...</option>
+              <option value="Kecharis Hotel">Kecharis Hotel</option>
+              <option value="Tsaghkadzor Inn">Tsaghkadzor Inn</option>
+              <option value="Stonehenge Tsaghkadzor">Stonehenge Tsaghkadzor</option>
+            </select>
+            <span class="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <!-- Cart Drawer Trigger Button -->
+        <button type="button" onclick="openCartDrawer()"
+          class="relative inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 active:scale-[0.99] text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-sm transition cursor-pointer shrink-0">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+          </svg>
+          <span>Order List</span>
+          <span id="header-cart-badge"
+            class="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-xs font-bold rounded-full bg-emerald-500 text-white">
+            0
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Navigation Tabs -->
+    <div class="border-t border-slate-100 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav id="category-tabs" class="flex items-center gap-2 py-2.5 overflow-x-auto no-scrollbar" aria-label="Product Categories">
+          <!-- Category buttons populated dynamically by JS -->
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-28">
+
+    <!-- Hotel Selection Banner Card (Prominent reminder if not selected yet) -->
+    <section id="hotel-banner" class="mb-6 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-start sm:items-center gap-3.5">
+        <div class="w-11 h-11 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-sm sm:text-base font-semibold text-slate-900">
+            Ordering Hotel / <span class="text-slate-500 font-normal">Hotel Pemesan</span>
+          </h2>
+          <p id="hotel-banner-subtext" class="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Please select your hotel before submitting the shopping list.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Hotel Pill Buttons -->
+      <div class="flex flex-wrap gap-2">
+        <button type="button" data-hotel-pill="Kecharis Hotel" onclick="syncHotelSelection('Kecharis Hotel')"
+          class="hotel-pill px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 transition cursor-pointer">
+          Kecharis Hotel
+        </button>
+        <button type="button" data-hotel-pill="Tsaghkadzor Inn" onclick="syncHotelSelection('Tsaghkadzor Inn')"
+          class="hotel-pill px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 transition cursor-pointer">
+          Tsaghkadzor Inn
+        </button>
+        <button type="button" data-hotel-pill="Stonehenge Tsaghkadzor" onclick="syncHotelSelection('Stonehenge Tsaghkadzor')"
+          class="hotel-pill px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 transition cursor-pointer">
+          Stonehenge Tsaghkadzor
+        </button>
+      </div>
+    </section>
+
+    <!-- Active Category Header & Search Filter -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div>
+        <h2 id="active-category-title" class="text-xl sm:text-2xl font-bold text-slate-900">Meat &amp; Poultry</h2>
+        <p id="active-category-subtitle" class="text-xs sm:text-sm text-slate-500">Daging &amp; Unggas • Select quantities below</p>
+      </div>
+
+      <!-- Search inside category / all items -->
+      <div class="relative w-full sm:w-72">
+        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input id="search-input" type="text" oninput="handleSearch(this.value)"
+          placeholder="Search English or Indonesian..."
+          class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-8 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" />
+        <button id="clear-search-btn" type="button" onclick="clearSearch()"
+          class="hidden absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+          aria-label="Clear search">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+      <!-- Product cards rendered dynamically by JS -->
+    </div>
+
+    <!-- Empty Search State -->
+    <div id="empty-search-state" class="hidden text-center py-12 bg-white border border-slate-200 rounded-2xl">
+      <p class="text-slate-600 font-medium">No matching items found in this category.</p>
+      <p class="text-sm text-slate-400 mt-1">You can add any custom item using the box below.</p>
+    </div>
+
+    <!-- Custom "Other / Not on the list" Box Inside Every Category -->
+    <section class="mt-8 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+      <div class="flex items-start gap-3 mb-4">
+        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">
+            Can't find an item in <span id="custom-box-category-name" class="text-emerald-600">Meat &amp; Poultry</span>?
+          </h3>
+          <p class="text-xs sm:text-sm text-slate-500">
+            Tidak menemukan barang di kategori ini? Tambahkan pesanan khusus di bawah ini.
+          </p>
+        </div>
+      </div>
+
+      <form onsubmit="addCustomItem(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+        <div class="sm:col-span-7">
+          <label for="custom-item-name" class="sr-only">Custom item name or description</label>
+          <input id="custom-item-name" type="text" required
+            placeholder="Enter item name / weight / brand (e.g., Lamb Chops 2kg)..."
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" />
+        </div>
+        <div class="sm:col-span-2">
+          <label for="custom-item-qty" class="sr-only">Quantity</label>
+          <input id="custom-item-qty" type="number" min="1" value="1" required
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 text-center font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" />
+        </div>
+        <div class="sm:col-span-3">
+          <button type="submit"
+            class="w-full h-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-sm transition cursor-pointer flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add Custom Item</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- List of custom items added in the currently active category -->
+      <div id="category-custom-items-list" class="mt-4 space-y-2 hidden">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Bottom Summary Bar (Mobile & Desktop quick access when cart > 0) -->
+  <div id="floating-cart-bar" class="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:w-96 z-30 hidden">
+    <button type="button" onclick="openCartDrawer()"
+      class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl p-4 shadow-xl border border-slate-700/80 flex items-center justify-between transition cursor-pointer">
+      <div class="flex items-center gap-3">
+        <span id="floating-cart-count"
+          class="w-8 h-8 rounded-xl bg-emerald-500 text-white font-bold text-sm flex items-center justify-center">
+          0
+        </span>
+        <div class="text-left">
+          <div class="text-sm font-semibold">Review &amp; Send Order</div>
+          <div id="floating-cart-hotel" class="text-xs text-slate-300">No hotel selected</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="floating-cart-total" class="text-sm font-bold text-emerald-400"></span>
+        <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </button>
+  </div>
+
+  <!-- Slide-Over Cart & Checkout Drawer -->
+  <div id="cart-drawer-backdrop" class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden transition-opacity" onclick="closeCartDrawer()"></div>
+
+  <aside id="cart-drawer"
+    class="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col transform translate-x-full transition-transform duration-300 ease-out"
+    aria-label="Order Summary Drawer">
+
+    <!-- Drawer Header -->
+    <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+      <div>
+        <h2 class="text-lg font-bold text-slate-900">Your Shopping List</h2>
+        <p class="text-xs text-slate-500">Daftar Belanja • Review items before sending</p>
+      </div>
+      <button type="button" onclick="closeCartDrawer()"
+        class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer"
+        aria-label="Close drawer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-5">
+
+      <!-- Hotel Selector inside Checkout Drawer -->
+      <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+        <label for="drawer-hotel-select" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+          Select Hotel / Pilih Hotel <span class="text-rose-500">*</span>
+        </label>
+        <select id="drawer-hotel-select" onchange="syncHotelSelection(this.value)"
+          class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition cursor-pointer">
+          <option value="">-- Choose a Hotel --</option>
+          <option value="Kecharis Hotel">Kecharis Hotel</option>
+          <option value="Tsaghkadzor Inn">Tsaghkadzor Inn</option>
+          <option value="Stonehenge Tsaghkadzor">Stonehenge Tsaghkadzor</option>
+        </select>
+        <p id="drawer-hotel-error" class="hidden text-xs font-medium text-rose-600 mt-1.5">
+          Please select one of the hotels above before sending your order.
+        </p>
+      </div>
+
+      <!-- Cart Items Container -->
+      <div id="cart-items-container" class="space-y-3">
+        <!-- Populated dynamically -->
+      </div>
+
+      <!-- Empty Cart State -->
+      <div id="empty-cart-state" class="text-center py-12">
+        <div class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-700">Your shopping list is empty</p>
+        <p class="text-xs text-slate-400 mt-1">Select quantities from any category to build your order.</p>
+      </div>
+
+      <!-- Status Feedback Box (Loading / Success / Error) -->
+      <div id="order-status-box" class="hidden rounded-2xl p-4 border text-sm"></div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="p-5 border-t border-slate-200 bg-white space-y-3">
+      <!-- Total Row (Shown automatically if any selected items have price > 0) -->
+      <div id="drawer-total-row" class="hidden flex items-center justify-between text-sm">
+        <span class="text-slate-500 font-medium">Estimated Total:</span>
+        <span id="drawer-grand-total" class="text-lg font-bold text-slate-900">$0.00</span>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-500">
+        <span>Total Selected Units:</span>
+        <span id="drawer-total-units" class="font-bold text-slate-800">0 items</span>
+      </div>
+
+      <div class="flex gap-2.5 pt-1">
+        <button type="button" id="clear-cart-btn" onclick="clearCart()"
+          class="px-4 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-sm font-semibold transition cursor-pointer">
+          Clear
+        </button>
+        <button type="button" id="submit-order-btn" onclick="submitOrderToTelegram()"
+          class="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold text-sm py-3 px-4 rounded-xl shadow-sm transition cursor-pointer flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          <span>Send Order to Telegram</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Toast Notification -->
+  <div id="toast-notification"
+    class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-xl shadow-lg opacity-0 pointer-events-none transition-opacity duration-200">
+  </div>
+
+  <script>
+    /**
+     * ============================================================================
+     * CONFIGURATION & EASY PRICE EDITOR
+     * ============================================================================
+     * Edit `CURRENCY_SYMBOL` and any `price` value below (e.g., price: 12.50 or 4500).
+     * When `price: 0`, the UI cleanly shows "Price on request" and hides $0 totals.
+     * As soon as you set `price > 0`, line totals and grand totals appear automatically.
+     */
+    const TELEGRAM_BOT_TOKEN = "9145387186:AAHguvt6VHhcS0TFjtEnsfU70civNDcktRg";
+    const TELEGRAM_CHAT_ID = "7966932902";
+    const CURRENCY_SYMBOL = "$"; // Change to "AMD " or "IDR " if desired
+
+    const CATEGORIES = [
+      { id: "meat", nameEn: "Meat & Poultry", nameId: "Daging & Unggas", icon: "🥩" },
+      { id: "vegetables", nameEn: "Vegetables", nameId: "Sayuran", icon: "🥬" },
+      { id: "sauces", nameEn: "Sauces & Spices", nameId: "Saus & Bumbu", icon: "🧂" },
+      { id: "electronics", nameEn: "Electronics & Equipment", nameId: "Elektronik & Peralatan", icon: "🖥️" },
+      { id: "drinks", nameEn: "Drinks", nameId: "Minuman", icon: "🍷" },
+    ];
+
+    /**
+     * PRODUCT CATALOG
+     * To update prices later, simply change `price: 0` to the desired number.
+     */
+    const PRODUCTS = [
+      // ==================== 1. MEAT & POULTRY ====================
+      {
+        id: "pork-leg-ham",
+        category: "meat",
+        nameEn: "Pork Leg / Ham",
+        nameId: "Paha Babi / Ham",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "pork-shoulder",
+        category: "meat",
+        nameEn: "Pork Shoulder",
+        nameId: "Bahu Babi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1602470520998-f4a52199a3d6?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "pork-neck",
+        category: "meat",
+        nameEn: "Pork Neck",
+        nameId: "Leher Babi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "pork-ribs",
+        category: "meat",
+        nameEn: "Pork Ribs",
+        nameId: "Iga Babi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "pork-tenderloin",
+        category: "meat",
+        nameEn: "Pork Tenderloin",
+        nameId: "Has Dalam Babi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "pork-loin",
+        category: "meat",
+        nameEn: "Pork Loin",
+        nameId: "Has Luar Babi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1551028150-64b9f398f678?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "pork-belly",
+        category: "meat",
+        nameEn: "Pork Belly",
+        nameId: "Perut Babi (Samcan)",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1623047437095-27418540c288?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-whole",
+        category: "meat",
+        nameEn: "Chicken (Whole)",
+        nameId: "Ayam Utuh",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-leg",
+        category: "meat",
+        nameEn: "Chicken Leg",
+        nameId: "Paha Ayam Bawah (Drumstick)",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-thigh",
+        category: "meat",
+        nameEn: "Chicken Thigh",
+        nameId: "Paha Ayam Atas",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-wings",
+        category: "meat",
+        nameEn: "Chicken Wings",
+        nameId: "Sayap Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1527477396000-e27163b481c2?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-breast",
+        category: "meat",
+        nameEn: "Chicken Breast",
+        nameId: "Dada Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-tenderloin",
+        category: "meat",
+        nameEn: "Chicken Tenderloin",
+        nameId: "Has Dalam Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-back",
+        category: "meat",
+        nameEn: "Chicken Back",
+        nameId: "Punggung Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1587593810167-a84920ea0781?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-neck",
+        category: "meat",
+        nameEn: "Chicken Neck",
+        nameId: "Leher Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-liver",
+        category: "meat",
+        nameEn: "Chicken Liver",
+        nameId: "Hati Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-hearts",
+        category: "meat",
+        nameEn: "Chicken Hearts",
+        nameId: "Jantung Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chicken-gizzards",
+        category: "meat",
+        nameEn: "Chicken Gizzards",
+        nameId: "Ampela Ayam",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-general",
+        category: "meat",
+        nameEn: "Beef",
+        nameId: "Daging Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-round",
+        category: "meat",
+        nameEn: "Beef Round",
+        nameId: "Daging Sapi Bagian Paha (Gandik)",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-ribeye",
+        category: "meat",
+        nameEn: "Beef Ribeye",
+        nameId: "Daging Sapi Ribeye",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1546964124-0cce460f38ef?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-tenderloin",
+        category: "meat",
+        nameEn: "Beef Tenderloin",
+        nameId: "Has Dalam Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-neck",
+        category: "meat",
+        nameEn: "Beef Neck",
+        nameId: "Leher Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-chuck",
+        category: "meat",
+        nameEn: "Beef Chuck",
+        nameId: "Sampil Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-ribs",
+        category: "meat",
+        nameEn: "Beef Ribs",
+        nameId: "Iga Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-brisket",
+        category: "meat",
+        nameEn: "Beef Brisket",
+        nameId: "Sandung Lamur Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-flank",
+        category: "meat",
+        nameEn: "Beef Flank",
+        nameId: "Daging Perut Sapi (Sancan)",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-shank",
+        category: "meat",
+        nameEn: "Beef Shank",
+        nameId: "Sengkel Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-tongue",
+        category: "meat",
+        nameEn: "Beef Tongue",
+        nameId: "Lidah Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-liver",
+        category: "meat",
+        nameEn: "Beef Liver",
+        nameId: "Hati Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "beef-heart",
+        category: "meat",
+        nameEn: "Beef Heart",
+        nameId: "Jantung Sapi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80"
+      },
+
+      // ==================== 2. VEGETABLES ====================
+      {
+        id: "button-mushroom",
+        category: "vegetables",
+        nameEn: "Button Mushroom",
+        nameId: "Jamur Kancing",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "green-beans",
+        category: "vegetables",
+        nameEn: "Green Beans",
+        nameId: "Buncis",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "daikon-radish",
+        category: "vegetables",
+        nameEn: "Daikon Radish",
+        nameId: "Lobak Putih",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "chinese-cabbage",
+        category: "vegetables",
+        nameEn: "Chinese Cabbage",
+        nameId: "Sawi Putih",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "white-cabbage",
+        category: "vegetables",
+        nameEn: "White Cabbage",
+        nameId: "Kubis Putih",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "cauliflower",
+        category: "vegetables",
+        nameEn: "Cauliflower",
+        nameId: "Kembang Kol",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1568584711075-3d021a7c3ca3?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "eggplant",
+        category: "vegetables",
+        nameEn: "Eggplant",
+        nameId: "Terong",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "sweet-corn",
+        category: "vegetables",
+        nameEn: "Sweet Corn",
+        nameId: "Jagung Manis",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "leek",
+        category: "vegetables",
+        nameEn: "Leek",
+        nameId: "Daun Bawang Prei",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "red-chili-pepper",
+        category: "vegetables",
+        nameEn: "Red Chili Pepper",
+        nameId: "Cabai Merah Besar / Keriting",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "romaine-lettuce",
+        category: "vegetables",
+        nameEn: "Romaine Lettuce",
+        nameId: "Selada Romaine",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "king-oyster-mushroom",
+        category: "vegetables",
+        nameEn: "King Oyster Mushroom",
+        nameId: "Jamur Tiram Raja",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "cucumber",
+        category: "vegetables",
+        nameEn: "Cucumber",
+        nameId: "Timun",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "butternut-squash",
+        category: "vegetables",
+        nameEn: "Butternut Squash",
+        nameId: "Labu Madu (Butternut)",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1570586437263-ab629fccc818?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "mint",
+        category: "vegetables",
+        nameEn: "Mint",
+        nameId: "Daun Mint",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1628556270448-4d4e4148e1b1?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "enoki-mushrooms",
+        category: "vegetables",
+        nameEn: "Enoki Mushrooms",
+        nameId: "Jamur Enoki",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1615485500704-8e990f9900f7?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "red-bell-pepper",
+        category: "vegetables",
+        nameEn: "Red Bell Pepper",
+        nameId: "Paprika Merah",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "tomato",
+        category: "vegetables",
+        nameEn: "Tomato",
+        nameId: "Tomat",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "carrot",
+        category: "vegetables",
+        nameEn: "Carrot",
+        nameId: "Wortel",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&w=600&q=80"
+      },
+
+      // ==================== 3. SAUCES & SPICES ====================
+      {
+        id: "ground-coriander",
+        category: "sauces",
+        nameEn: "Ground Coriander",
+        nameId: "Ketumbar Bubuk",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "oyster-sauce",
+        category: "sauces",
+        nameEn: "Oyster Sauce",
+        nameId: "Saus Tiram",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1585325701956-60dd9c8553bc?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "tomato-ketchup",
+        category: "sauces",
+        nameEn: "Tomato Ketchup",
+        nameId: "Saus Tomat",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1607532941433-304659e8198a?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "worcestershire-sauce",
+        category: "sauces",
+        nameEn: "Lea & Perrins Worcestershire Sauce",
+        nameId: "Saus Inggris (Lea & Perrins)",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1585325701956-60dd9c8553bc?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "ground-black-pepper",
+        category: "sauces",
+        nameEn: "Ground Black Pepper",
+        nameId: "Lada Hitam Bubuk",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=600&q=80"
+      },
+
+      // ==================== 4. ELECTRONICS & EQUIPMENT ====================
+      {
+        id: "dahua-monitor",
+        category: "electronics",
+        nameEn: "Dahua Monitor",
+        nameId: "Monitor Dahua",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "dahua-keyboard",
+        category: "electronics",
+        nameEn: "Dahua Keyboard",
+        nameId: "Keyboard Dahua",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "xiaomi-monitor",
+        category: "electronics",
+        nameEn: "Xiaomi Monitor",
+        nameId: "Monitor Xiaomi",
+        price: 0,
+        image: "https://images.unsplash.com/photo-1547119957-637f8679db1e?auto=format&fit=crop&w=600&q=80"
+      },
+
+      // ==================== 5. DRINKS ====================
+      {
+        id: "red-wine",
+        category: "drinks",
+        nameEn: "Red Wine",
+        nameId: "Anggur Merah",
+        price: 0,
+        hasWineStyle: true,
+        image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=600&q=80"
+      },
+      {
+        id: "white-wine",
+        category: "drinks",
+        nameEn: "White Wine",
+        nameId: "Anggur Putih",
+        price: 0,
+        hasWineStyle: true,
+        image: "https://images.unsplash.com/photo-1558001373-7b93ee48ffa0?auto=format&fit=crop&w=600&q=80"
+      }
+    ];
+
+    const WINE_STYLES = [
+      { id: "Sweet", labelEn: "Sweet", labelId: "Manis" },
+      { id: "Semi-Sweet", labelEn: "Semi-Sweet", labelId: "Semi-Manis" },
+      { id: "Dry / Bitter", labelEn: "Dry / Bitter", labelId: "Kering / Pahit" }
+    ];
+
+    // ============================================================================
+    // APPLICATION STATE
+    // ============================================================================
+    let state = {
+      activeCategory: "meat",
+      searchQuery: "",
+      selectedHotel: "",
+      // Standard items cart map: key -> { productId, qty, wineStyle? }
+      // For standard non-wine items, key = productId
+      // For wine items, key = `${productId}__${wineStyle}`
+      cart: {},
+      // Custom items array: { id, categoryId, name, qty }
+      customItems: [],
+      // Tracks currently selected wine style dropdown per wine product card
+      selectedWineStyles: {
+        "red-wine": "Sweet",
+        "white-wine": "Sweet"
+      },
+      isSending: false
+    };
+
+    // ============================================================================
+    // INITIALIZATION
+    // ============================================================================
+    document.addEventListener("DOMContentLoaded", () => {
+      renderCategoryTabs();
+      renderProducts();
+      renderCustomItemsInCategory();
+      updateCartUI();
+    });
+
+    // ============================================================================
+    // HOTEL SELECTION SYNC
+    // ============================================================================
+    function syncHotelSelection(hotelName) {
+      state.selectedHotel = hotelName;
+
+      // Sync both dropdowns
+      const headerSelect = document.getElementById("header-hotel-select");
+      const drawerSelect = document.getElementById("drawer-hotel-select");
+      if (headerSelect) headerSelect.value = hotelName;
+      if (drawerSelect) drawerSelect.value = hotelName;
+
+      // Sync quick pill buttons
+      document.querySelectorAll(".hotel-pill").forEach((btn) => {
+        const isSelected = btn.getAttribute("data-hotel-pill") === hotelName;
+        if (isSelected) {
+          btn.classList.remove("border-slate-200", "bg-slate-50", "text-slate-700");
+          btn.classList.add("border-emerald-600", "bg-emerald-600", "text-white", "shadow-xs");
+        } else {
+          btn.classList.add("border-slate-200", "bg-slate-50", "text-slate-700");
+          btn.classList.remove("border-emerald-600", "bg-emerald-600", "text-white", "shadow-xs");
+        }
+      });
+
+      // Update banner subtext
+      const subtext = document.getElementById("hotel-banner-subtext");
+      const drawerError = document.getElementById("drawer-hotel-error");
+      if (hotelName) {
+        subtext.innerHTML = `Selected Hotel: <span class="font-semibold text-emerald-700">${escapeHtml(hotelName)}</span>`;
+        if (drawerError) drawerError.classList.add("hidden");
+      } else {
+        subtext.textContent = "Please select your hotel before submitting the shopping list.";
+      }
+
+      updateCartUI();
+    }
+
+    // ============================================================================
+    // CATEGORY TABS & SEARCH
+    // ============================================================================
+    function renderCategoryTabs() {
+      const container = document.getElementById("category-tabs");
+      container.innerHTML = CATEGORIES.map((cat) => {
+        const isActive = cat.id === state.activeCategory;
+        const countInCat = getCategorySelectedCount(cat.id);
+
+        return `
+          <button type="button" onclick="selectCategory('${cat.id}')"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition cursor-pointer border ${
+              isActive
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+            }">
+            <span>${cat.icon}</span>
+            <span>${cat.nameEn}</span>
+            <span class="text-xs opacity-80 font-normal hidden md:inline">(${cat.nameId})</span>
+            ${
+              countInCat > 0
+                ? `<span class="ml-1 px-1.5 py-0.5 text-[11px] font-bold rounded-full ${
+                    isActive ? "bg-white text-emerald-700" : "bg-emerald-100 text-emerald-800"
+                  }">${countInCat}</span>`
+                : ""
+            }
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectCategory(categoryId) {
+      state.activeCategory = categoryId;
+      const cat = CATEGORIES.find((c) => c.id === categoryId);
+
+      document.getElementById("active-category-title").textContent = cat.nameEn;
+      document.getElementById("active-category-subtitle").textContent = `${cat.nameId} • Select quantities below`;
+      document.getElementById("custom-box-category-name").textContent = cat.nameEn;
+
+      renderCategoryTabs();
+      renderProducts();
+      renderCustomItemsInCategory();
+    }
+
+    function handleSearch(query) {
+      state.searchQuery = query.trim().toLowerCase();
+      const clearBtn = document.getElementById("clear-search-btn");
+      if (state.searchQuery) {
+        clearBtn.classList.remove("hidden");
+      } else {
+        clearBtn.classList.add("hidden");
+      }
+      renderProducts();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById("search-input");
+      input.value = "";
+      handleSearch("");
+    }
+
+    // ============================================================================
+    // PRODUCT CARDS RENDERING & QUANTITY LOGIC
+    // ============================================================================
+    function renderProducts() {
+      const grid = document.getElementById("product-grid");
+      const emptyState = document.getElementById("empty-search-state");
+
+      const filtered = PRODUCTS.filter((product) => {
+        const matchesCat = product.category === state.activeCategory;
+        if (!matchesCat) return false;
+        if (!state.searchQuery) return true;
+        return (
+          product.nameEn.toLowerCase().includes(state.searchQuery) ||
+          product.nameId.toLowerCase().includes(state.searchQuery)
+        );
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+
+      grid.innerHTML = filtered.map((product) => {
+        const activeWineStyle = product.hasWineStyle ? state.selectedWineStyles[product.id] || "Sweet" : null;
+        const cartKey = product.hasWineStyle ? `${product.id}__${activeWineStyle}` : product.id;
+        const currentQty = state.cart[cartKey]?.qty || 0;
+
+        // Calculate total qty across all wine styles if it's a wine card
+        let totalWineQty = 0;
+        if (product.hasWineStyle) {
+          WINE_STYLES.forEach((ws) => {
+            totalWineQty += state.cart[`${product.id}__${ws.id}`]?.qty || 0;
+          });
+        }
+
+        const priceLabel =
+          product.price > 0
+            ? `${CURRENCY_SYMBOL}${product.price.toFixed(2)}`
+            : `<span class="text-slate-400 font-normal text-xs">Price on request</span>`;
+
+        return `
+          <article class="bg-white border ${
+            (product.hasWineStyle ? totalWineQty : currentQty) > 0
+              ? "border-emerald-400 ring-1 ring-emerald-400/40"
+              : "border-slate-200"
+          } rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition flex flex-col justify-between">
+            <div>
+              <!-- Product Image with Graceful SVG Fallback -->
+              <div class="relative aspect-[16/10] bg-slate-100 overflow-hidden">
+                <img src="${product.image}" alt="${escapeHtml(product.nameEn)}"
+                  loading="lazy"
+                  onerror="handleImageError(this, '${product.category}')"
+                  class="w-full h-full object-cover" />
+                ${
+                  (product.hasWineStyle ? totalWineQty : currentQty) > 0
+                    ? `<span class="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                        ${product.hasWineStyle ? totalWineQty : currentQty} in list
+                      </span>`
+                    : ""
+                }
+              </div>
+
+              <!-- Product Details -->
+              <div class="p-4">
+                <h3 class="text-base font-bold text-slate-900 leading-snug">${escapeHtml(product.nameEn)}</h3>
+                <p class="text-sm font-medium text-emerald-700 mt-0.5">${escapeHtml(product.nameId)}</p>
+
+                <div class="mt-2 text-sm font-semibold text-slate-800">
+                  ${priceLabel}
+                </div>
+
+                <!-- Special Wine Sweetness Selector -->
+                ${
+                  product.hasWineStyle
+                    ? `
+                    <div class="mt-3 pt-3 border-t border-slate-100">
+                      <label class="block text-xs font-semibold text-slate-600 mb-1.5">
+                        Taste / Rasa:
+                      </label>
+                      <div class="grid grid-cols-3 gap-1.5">
+                        ${WINE_STYLES.map((ws) => {
+                          const isSelected = activeWineStyle === ws.id;
+                          const styleQty = state.cart[`${product.id}__${ws.id}`]?.qty || 0;
+                          return `
+                            <button type="button" onclick="selectWineStyle('${product.id}', '${ws.id}')"
+                              class="px-2 py-1.5 rounded-lg text-center border text-xs transition cursor-pointer ${
+                                isSelected
+                                  ? "bg-slate-900 text-white border-slate-900 font-semibold"
+                                  : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                              }">
+                              <div class="truncate">${ws.labelEn}</div>
+                              <div class="text-[10px] opacity-80 truncate">${ws.labelId}</div>
+                              ${
+                                styleQty > 0
+                                  ? `<div class="mt-0.5 text-[10px] font-bold ${
+                                      isSelected ? "text-emerald-300" : "text-emerald-600"
+                                    }">(${styleQty})</div>`
+                                  : ""
+                              }
+                            </button>
+                          `;
+                        }).join("")}
+                      </div>
+                    </div>
+                  `
+                    : ""
+                }
+              </div>
+            </div>
+
+            <!-- Quantity Controls Footer -->
+            <div class="px-4 pb-4 pt-1">
+              <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-1.5">
+                <button type="button" onclick="updateProductQty('${product.id}', -1)"
+                  aria-label="Decrease quantity"
+                  class="w-9 h-9 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-95 flex items-center justify-center font-bold text-lg transition cursor-pointer">
+                  −
+                </button>
+                <div class="text-center">
+                  <span class="text-base font-bold text-slate-900">${currentQty}</span>
+                  ${
+                    product.hasWineStyle
+                      ? `<span class="block text-[10px] text-slate-400 leading-none">${escapeHtml(activeWineStyle)}</span>`
+                      : ""
+                  }
+                </div>
+                <button type="button" onclick="updateProductQty('${product.id}', 1)"
+                  aria-label="Increase quantity"
+                  class="w-9 h-9 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 flex items-center justify-center font-bold text-lg shadow-xs transition cursor-pointer">
+                  +
+                </button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function handleImageError(imgElement, category) {
+      const icons = {
+        meat: "🥩",
+        vegetables: "🥬",
+        sauces: "🧂",
+        electronics: "🖥️",
+        drinks: "🍷"
+      };
+      const emoji = icons[category] || "🛒";
+      const parent = imgElement.parentElement;
+      imgElement.remove();
+      const fallback = document.createElement("div");
+      fallback.className = "w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400";
+      fallback.innerHTML = `<span class="text-4xl mb-1">${emoji}</span><span class="text-[11px] font-medium">Product Image</span>`;
+      parent.prepend(fallback);
+    }
+
+    function selectWineStyle(productId, wineStyle) {
+      state.selectedWineStyles[productId] = wineStyle;
+      renderProducts();
+    }
+
+    function updateProductQty(productId, delta) {
+      const product = PRODUCTS.find((p) => p.id === productId);
+      if (!product) return;
+
+      const wineStyle = product.hasWineStyle ? state.selectedWineStyles[productId] || "Sweet" : null;
+      const key = product.hasWineStyle ? `${productId}__${wineStyle}` : productId;
+
+      const existing = state.cart[key]?.qty || 0;
+      const nextQty = Math.max(0, existing + delta);
+
+      if (nextQty === 0) {
+        delete state.cart[key];
+      } else {
+        state.cart[key] = {
+          productId: product.id,
+          qty: nextQty,
+          wineStyle: wineStyle
+        };
+      }
+
+      renderCategoryTabs();
+      renderProducts();
+      updateCartUI();
+    }
+
+    function setCartItemQtyByKey(key, delta) {
+      if (!state.cart[key]) return;
+      const nextQty = state.cart[key].qty + delta;
+      if (nextQty <= 0) {
+        delete state.cart[key];
+      } else {
+        state.cart[key].qty = nextQty;
+      }
+      renderCategoryTabs();
+      renderProducts();
+      updateCartUI();
+    }
+
+    // ============================================================================
+    // CUSTOM ITEMS PER CATEGORY
+    // ============================================================================
+    function addCustomItem(event) {
+      event.preventDefault();
+      const nameInput = document.getElementById("custom-item-name");
+      const qtyInput = document.getElementById("custom-item-qty");
+
+      const itemName = nameInput.value.trim();
+      const qty = parseInt(qtyInput.value, 10) || 1;
+
+      if (!itemName) return;
+
+      state.customItems.push({
+        id: "custom-" + Date.now() + "-" + Math.random().toString(36).slice(2, 6),
+        categoryId: state.activeCategory,
+        name: itemName,
+        qty: Math.max(1, qty)
+      });
+
+      nameInput.value = "";
+      qtyInput.value = "1";
+
+      renderCategoryTabs();
+      renderCustomItemsInCategory();
+      updateCartUI();
+      showToast(`Added "${itemName}" to shopping list`);
+    }
+
+    function removeCustomItem(customId) {
+      state.customItems = state.customItems.filter((item) => item.id !== customId);
+      renderCategoryTabs();
+      renderCustomItemsInCategory();
+      updateCartUI();
+    }
+
+    function updateCustomItemQty(customId, delta) {
+      const item = state.customItems.find((i) => i.id === customId);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) {
+        removeCustomItem(customId);
+        return;
+      }
+      renderCategoryTabs();
+      renderCustomItemsInCategory();
+      updateCartUI();
+    }
+
+    function renderCustomItemsInCategory() {
+      const listContainer = document.getElementById("category-custom-items-list");
+      const itemsInCat = state.customItems.filter((item) => item.categoryId === state.activeCategory);
+
+      if (itemsInCat.length === 0) {
+        listContainer.classList.add("hidden");
+        listContainer.innerHTML = "";
+        return;
+      }
+
+      listContainer.classList.remove("hidden");
+      listContainer.innerHTML = `
+        <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 pt-2">
+          Added Custom Items in This Category:
+        </div>
+        ${itemsInCat
+          .map(
+            (item) => `
+          <div class="flex items-center justify-between bg-emerald-50/60 border border-emerald-200 rounded-xl px-3.5 py-2.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="px-2 py-0.5 text-[11px] font-bold rounded-md bg-emerald-600 text-white shrink-0">Custom</span>
+              <span class="text-sm font-semibold text-slate-800 truncate">${escapeHtml(item.name)}</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 ml-2">
+              <button type="button" onclick="updateCustomItemQty('${item.id}', -1)"
+                class="w-7 h-7 rounded-lg bg-white border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-100 cursor-pointer">−</button>
+              <span class="text-sm font-bold text-slate-900 w-5 text-center">${item.qty}</span>
+              <button type="button" onclick="updateCustomItemQty('${item.id}', 1)"
+                class="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 cursor-pointer">+</button>
+              <button type="button" onclick="removeCustomItem('${item.id}')"
+                class="ml-1 text-slate-400 hover:text-rose-600 p-1 cursor-pointer" title="Remove">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `
+          )
+          .join("")}
+      `;
+    }
+
+    // ============================================================================
+    // CART UI & CALCULATIONS
+    // ============================================================================
+    function getCategorySelectedCount(categoryId) {
+      let count = 0;
+      Object.values(state.cart).forEach((entry) => {
+        const prod = PRODUCTS.find((p) => p.id === entry.productId);
+        if (prod && prod.category === categoryId) {
+          count += entry.qty;
+        }
+      });
+      state.customItems.forEach((item) => {
+        if (item.categoryId === categoryId) {
+          count += item.qty;
+        }
+      });
+      return count;
+    }
+
+    function getCartSummary() {
+      let totalUnits = 0;
+      let totalPrice = 0;
+      let hasAnyPricedItem = false;
+
+      const standardEntries = Object.entries(state.cart).map(([key, entry]) => {
+        const product = PRODUCTS.find((p) => p.id === entry.productId);
+        totalUnits += entry.qty;
+        if (product && product.price > 0) {
+          hasAnyPricedItem = true;
+          totalPrice += product.price * entry.qty;
+        }
+        return { key, entry, product };
+      });
+
+      state.customItems.forEach((item) => {
+        totalUnits += item.qty;
+      });
+
+      return {
+        totalUnits,
+        totalPrice,
+        hasAnyPricedItem,
+        standardEntries,
+        customEntries: state.customItems
+      };
+    }
+
+    function updateCartUI() {
+      const summary = getCartSummary();
+
+      // Update header badge
+      document.getElementById("header-cart-badge").textContent = summary.totalUnits;
+
+      // Update floating bottom bar
+      const floatingBar = document.getElementById("floating-cart-bar");
+      if (summary.totalUnits > 0) {
+        floatingBar.classList.remove("hidden");
+        document.getElementById("floating-cart-count").textContent = summary.totalUnits;
+        document.getElementById("floating-cart-hotel").textContent =
+          state.selectedHotel || "Tap to select hotel & send";
+        document.getElementById("floating-cart-total").textContent = summary.hasAnyPricedItem
+          ? `${CURRENCY_SYMBOL}${summary.totalPrice.toFixed(2)}`
+          : "";
+      } else {
+        floatingBar.classList.add("hidden");
+      }
+
+      // Update Drawer Items
+      const container = document.getElementById("cart-items-container");
+      const emptyCart = document.getElementById("empty-cart-state");
+      const submitBtn = document.getElementById("submit-order-btn");
+      const totalRow = document.getElementById("drawer-total-row");
+
+      document.getElementById("drawer-total-units").textContent = `${summary.totalUnits} ${
+        summary.totalUnits === 1 ? "item" : "items"
+      }`;
+
+      if (summary.hasAnyPricedItem) {
+        totalRow.classList.remove("hidden");
+        document.getElementById("drawer-grand-total").textContent = `${CURRENCY_SYMBOL}${summary.totalPrice.toFixed(2)}`;
+      } else {
+        totalRow.classList.add("hidden");
+      }
+
+      if (summary.totalUnits === 0) {
+        container.innerHTML = "";
+        emptyCart.classList.remove("hidden");
+        submitBtn.disabled = true;
+        return;
+      }
+
+      emptyCart.classList.add("hidden");
+      submitBtn.disabled = state.isSending;
+
+      let html = "";
+
+      // Render standard items grouped by category
+      CATEGORIES.forEach((cat) => {
+        const catStandard = summary.standardEntries.filter((x) => x.product && x.product.category === cat.id);
+        const catCustom = summary.customEntries.filter((x) => x.categoryId === cat.id);
+
+        if (catStandard.length === 0 && catCustom.length === 0) return;
+
+        html += `
+          <div class="pt-2">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+              <span>${cat.icon}</span>
+              <span>${cat.nameEn}</span>
+            </div>
+            <div class="space-y-2">
+        `;
+
+        catStandard.forEach(({ key, entry, product }) => {
+          const wineObj = entry.wineStyle ? WINE_STYLES.find((w) => w.id === entry.wineStyle) : null;
+          const lineTotal = product.price > 0 ? `${CURRENCY_SYMBOL}${(product.price * entry.qty).toFixed(2)}` : "";
+
+          html += `
+            <div class="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-3">
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-slate-900 truncate">${escapeHtml(product.nameEn)}</div>
+                <div class="text-xs text-emerald-700 truncate">${escapeHtml(product.nameId)}</div>
+                ${
+                  wineObj
+                    ? `<span class="inline-block mt-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-semibold">
+                        ${wineObj.labelEn} (${wineObj.labelId})
+                      </span>`
+                    : ""
+                }
+                ${lineTotal ? `<div class="text-xs font-semibold text-slate-600 mt-1">${lineTotal}</div>` : ""}
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="setCartItemQtyByKey('${key}', -1)"
+                  class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm cursor-pointer">−</button>
+                <span class="w-6 text-center text-sm font-bold text-slate-900">${entry.qty}</span>
+                <button type="button" onclick="setCartItemQtyByKey('${key}', 1)"
+                  class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm cursor-pointer">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        catCustom.forEach((item) => {
+          html += `
+            <div class="flex items-center justify-between gap-3 bg-emerald-50/50 border border-emerald-200 rounded-xl p-3">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white">Custom</span>
+                  <span class="text-sm font-bold text-slate-900 truncate">${escapeHtml(item.name)}</span>
+                </div>
+                <div class="text-xs text-slate-500 mt-0.5">Custom request in ${cat.nameEn}</div>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button type="button" onclick="updateCustomItemQty('${item.id}', -1)"
+                  class="w-7 h-7 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-sm cursor-pointer">−</button>
+                <span class="w-6 text-center text-sm font-bold text-slate-900">${item.qty}</span>
+                <button type="button" onclick="updateCustomItemQty('${item.id}', 1)"
+                  class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm cursor-pointer">+</button>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div></div>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function clearCart() {
+      state.cart = {};
+      state.customItems = [];
+      hideOrderStatus();
+      renderCategoryTabs();
+      renderProducts();
+      renderCustomItemsInCategory();
+      updateCartUI();
+    }
+
+    // ============================================================================
+    // DRAWER OPEN / CLOSE
+    // ============================================================================
+    function openCartDrawer() {
+      hideOrderStatus();
+      updateCartUI();
+      document.getElementById("cart-drawer-backdrop").classList.remove("hidden");
+      document.getElementById("cart-drawer").classList.remove("translate-x-full");
+      document.body.classList.add("overflow-hidden");
+    }
+
+    function closeCartDrawer() {
+      document.getElementById("cart-drawer-backdrop").classList.add("hidden");
+      document.getElementById("cart-drawer").classList.add("translate-x-full");
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    // ============================================================================
+    // TELEGRAM BOT ORDER SUBMISSION
+    // ============================================================================
+    async function submitOrderToTelegram() {
+      const hotelError = document.getElementById("drawer-hotel-error");
+
+      // Validate Hotel selection
+      if (!state.selectedHotel) {
+        hotelError.classList.remove("hidden");
+        document.getElementById("drawer-hotel-select").focus();
+        return;
+      }
+      hotelError.classList.add("hidden");
+
+      const summary = getCartSummary();
+      if (summary.totalUnits === 0) return;
+
+      // Build clean, structured English + Bahasa Indonesia message for Telegram
+      const now = new Date();
+      const timestamp = now.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+      let lines = [];
+      lines.push(`🛒 *NEW HOTEL SHOPPING LIST*`);
+      lines.push(`🏨 *Hotel:* ${escapeMarkdown(state.selectedHotel)}`);
+      lines.push(`🕒 *Time:* ${escapeMarkdown(timestamp)}`);
+      lines.push(`────────────────────`);
+
+      CATEGORIES.forEach((cat) => {
+        const catStandard = summary.standardEntries.filter((x) => x.product && x.product.category === cat.id);
+        const catCustom = summary.customEntries.filter((x) => x.categoryId === cat.id);
+
+        if (catStandard.length === 0 && catCustom.length === 0) return;
+
+        lines.push(`\n${cat.icon} *${escapeMarkdown(cat.nameEn.toUpperCase())}*`);
+
+        catStandard.forEach(({ entry, product }) => {
+          const wineObj = entry.wineStyle ? WINE_STYLES.find((w) => w.id === entry.wineStyle) : null;
+          const wineTag = wineObj ? ` [${wineObj.labelEn} / ${wineObj.labelId}]` : "";
+          const priceTag =
+            product.price > 0
+              ? ` — ${CURRENCY_SYMBOL}${(product.price * entry.qty).toFixed(2)}`
+              : "";
+
+          lines.push(
+            `• *${entry.qty}x* ${escapeMarkdown(product.nameEn)} _(${escapeMarkdown(product.nameId)})_${escapeMarkdown(
+              wineTag
+            )}${escapeMarkdown(priceTag)}`
+          );
+        });
+
+        catCustom.forEach((item) => {
+          lines.push(`• *${item.qty}x* [Custom] ${escapeMarkdown(item.name)}`);
+        });
+      });
+
+      lines.push(`\n────────────────────`);
+      lines.push(`📦 *Total Units:* ${summary.totalUnits}`);
+      if (summary.hasAnyPricedItem) {
+        lines.push(`💰 *Estimated Total:* ${CURRENCY_SYMBOL}${summary.totalPrice.toFixed(2)}`);
+      }
+
+      const messageText = lines.join("\n");
+
+      // Show Loading State
+      state.isSending = true;
+      const submitBtn = document.getElementById("submit-order-btn");
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>Sending Order...</span>
+      `;
+
+      showOrderStatus("loading", "Sending your shopping list to Telegram...");
+
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: messageText,
+            parse_mode: "Markdown"
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.description || "Telegram API rejected the request.");
+        }
+
+        // Success!
+        showOrderStatus(
+          "success",
+          `<strong>Order Sent Successfully!</strong><br/>Your shopping list for <strong>${escapeHtml(
+            state.selectedHotel
+          )}</strong> has been delivered.`
+        );
+
+        // Reset cart items while keeping hotel selected
+        state.cart = {};
+        state.customItems = [];
+        renderCategoryTabs();
+        renderProducts();
+        renderCustomItemsInCategory();
+        updateCartUI();
+      } catch (error) {
+        console.error("Telegram Order Error:", error);
+        showOrderStatus(
+          "error",
+          `<strong>Failed to send order.</strong><br/>Please check your internet connection and try again. (${escapeHtml(
+            error.message
+          )})`
+        );
+      } finally {
+        state.isSending = false;
+        submitBtn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          <span>Send Order to Telegram</span>
+        `;
+        submitBtn.disabled = getCartSummary().totalUnits === 0;
+      }
+    }
+
+    function showOrderStatus(type, htmlMessage) {
+      const box = document.getElementById("order-status-box");
+      box.classList.remove(
+        "hidden",
+        "bg-slate-50",
+        "border-slate-200",
+        "text-slate-700",
+        "bg-emerald-50",
+        "border-emerald-200",
+        "text-emerald-800",
+        "bg-rose-50",
+        "border-rose-200",
+        "text-rose-800"
+      );
+
+      if (type === "loading") {
+        box.classList.add("bg-slate-50", "border-slate-200", "text-slate-700");
+      } else if (type === "success") {
+        box.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800");
+      } else if (type === "error") {
+        box.classList.add("bg-rose-50", "border-rose-200", "text-rose-800");
+      }
+
+      box.innerHTML = htmlMessage;
+    }
+
+    function hideOrderStatus() {
+      const box = document.getElementById("order-status-box");
+      box.classList.add("hidden");
+    }
+
+    // ============================================================================
+    // UTILITIES
+    // ============================================================================
+    function showToast(message) {
+      const toast = document.getElementById("toast-notification");
+      toast.textContent = message;
+      toast.classList.remove("opacity-0");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add("opacity-0");
+      }, 2400);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeMarkdown(str) {
+      return String(str).replace(/([_*`\[])/g, "\\$1");
+    }
+  </script>
+</body>
+</html>
